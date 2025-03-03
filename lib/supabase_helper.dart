@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_structure/Supabase/supabase_shared_data.dart';
-import 'supabase_response.dart';
+import 'Supabase/supabase_response.dart';
 
 enum SupabaseTable {
   usuarios;
@@ -45,14 +45,16 @@ class SupabaseHelper {
   }
 
   static Future<SupabaseResponse> invoke(String s,
-      {Map<String, Object?>? body, Map<String, String>? headers}) async {
+      {Map<String, Object?>? body,
+      Map<String, String>? headers,
+      List<MultipartFile>? files}) async {
     try {
       final newBody = {
         ...?body,
         'local_db_version': SupabaseSharedData.getLocalDbVersion,
       };
       final res = await instance?.functions
-          .invoke(s, headers: headers, body: newBody)
+          .invoke(s, headers: headers, body: newBody, files: files)
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),

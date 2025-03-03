@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_structure/Supabase/supabase_extensions.dart';
-import 'supabase_helper.dart';
+import '../supabase_helper.dart';
 import 'supabase_response.dart';
 
 class SessionResponse extends SupabaseResponse {
