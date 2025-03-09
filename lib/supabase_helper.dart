@@ -44,17 +44,37 @@ class SupabaseHelper {
     }
   }
 
-  static Future<SupabaseResponse> invoke(String s,
-      {Map<String, Object?>? body,
+  static Future<SupabaseResponse> invokeWithFiles(String s,
+      {Map<String, String>? body,
       Map<String, String>? headers,
-      List<MultipartFile>? files}) async {
+      required List<MultipartFile> files}) async {
     try {
-      final newBody = {
+      final Map<String, String> newBody = {
         ...?body,
-        'local_db_version': SupabaseSharedData.getLocalDbVersion,
+        'local_db_version': SupabaseSharedData.getLocalDbVersion.toString(),
       };
       final res = await instance?.functions
           .invoke(s, headers: headers, body: newBody, files: files)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
+          );
+      final sup = SupabaseResponse.fromResponse(res);
+      return sup;
+    } catch (e) {
+      return SupabaseResponse.noResponse;
+    }
+  }
+
+  static Future<SupabaseResponse> invoke(String s,
+      {Map<String, Object?>? body, Map<String, String>? headers}) async {
+    try {
+      final newBody = {
+        ...?body,
+        'local_db_version': SupabaseSharedData.getLocalDbVersion.toString(),
+      };
+      final res = await instance?.functions
+          .invoke(s, headers: headers, body: newBody)
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
