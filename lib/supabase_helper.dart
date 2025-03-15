@@ -71,7 +71,7 @@ class SupabaseHelper {
     try {
       final newBody = {
         ...?body,
-        'local_db_version': SupabaseSharedData.getLocalDbVersion.toString(),
+        'local_db_version': SupabaseSharedData.getLocalDbVersion,
       };
       final res = await instance?.functions
           .invoke(s, headers: headers, body: newBody)
