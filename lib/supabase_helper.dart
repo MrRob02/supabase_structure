@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_structure/Supabase/supabase_shared_data.dart';
@@ -20,6 +22,8 @@ enum SupabaseTable {
 
 class SupabaseHelper {
   static SupabaseClient? instance;
+  static final _invalidTokenListener = StreamController<bool>.broadcast();
+  static Stream<bool> get invalidTokenListener => _invalidTokenListener.stream;
 
   static GoTrueClient? get auth => instance?.auth;
   //?Se inicializa en MainApp initState
@@ -60,6 +64,9 @@ class SupabaseHelper {
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
           );
       final sup = SupabaseResponse.fromResponse(res);
+      if (sup.tokenInvalid) {
+        _invalidTokenListener.add(true);
+      }
       return sup;
     } catch (e) {
       return SupabaseResponse.noResponse;
@@ -80,6 +87,12 @@ class SupabaseHelper {
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
           );
       final sup = SupabaseResponse.fromResponse(res);
+      if (sup.tokenInvalid) {
+        _invalidTokenListener.add(false);
+      }
+      if (sup.tokenInvalid) {
+        _invalidTokenListener.add(true);
+      }
       return sup;
     } catch (e) {
       return SupabaseResponse.noResponse;

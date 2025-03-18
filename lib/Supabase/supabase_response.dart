@@ -25,6 +25,6 @@ class SupabaseResponse {
   bool get isSuccess => message == 'success';
   bool get isServerError => message == 'server_error';
   bool get isDataInvalid => message == 'incorrect_data';
-  bool get tokenInvalid => message == 'token_invalid';
+  bool get tokenInvalid => message == 'token_invalido';
   bool get isUnsuccessful => !isSuccess;
 }
