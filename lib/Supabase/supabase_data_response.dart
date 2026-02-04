@@ -1,7 +1,8 @@
-import 'package:supabase_structure/supabase_structure.dart';
-
 //?Se tienen configuradas que solamente se puedan regresar 200 filas por query
 //?Esta configuracion se cambia en: Project Settings -> API
+import '../supabase_helper.dart';
+import 'supabase_response.dart';
+
 class SupabaseDataResponse<T> extends SupabaseResponse {
   List<T> resData = [];
   SupabaseDataResponse(

@@ -21,17 +21,18 @@ enum SupabaseTable {
 //link: https://supabase.com/dashboard/project/[the-project-id]/settings/auth
 
 class SupabaseHelper {
-  static SupabaseClient? instance;
+  static String? token;
+  static late final SupabaseClient instance;
   static final _invalidTokenListener = StreamController<bool>.broadcast();
   static Stream<bool> get invalidTokenListener => _invalidTokenListener.stream;
-
-  static GoTrueClient? get auth => instance?.auth;
+  static GoTrueClient get auth => instance.auth;
   //?Se inicializa en MainApp initState
   static Future<void> initialize(
       {required String productionUrl,
       required String productionAnonKey,
       required String testUrl,
-      required String testAnonKey}) async {
+      required String testAnonKey,
+      String? refreshToken}) async {
     try {
       await SupabaseSharedData.initShared();
       await Supabase.initialize(
@@ -43,6 +44,9 @@ class SupabaseHelper {
       );
 
       instance = Supabase.instance.client;
+      if (refreshToken != null) {
+        await instance.auth.setSession(refreshToken);
+      }
     } catch (e) {
       debugPrint('Error initializing Supabase: $e');
     }
@@ -57,8 +61,15 @@ class SupabaseHelper {
         ...?body,
         'local_db_version': SupabaseSharedData.getLocalDbVersion.toString(),
       };
-      final res = await instance?.functions
-          .invoke(s, headers: headers, body: newBody, files: files)
+      final String? bearer = token ?? instance.auth.currentSession?.accessToken;
+      final res = await instance.functions
+          .invoke(s,
+              headers: {
+                ...headers ?? {},
+                if (bearer != null) 'Authorization': 'Bearer $bearer'
+              },
+              body: newBody,
+              files: files)
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
@@ -80,8 +91,14 @@ class SupabaseHelper {
         ...?body,
         'local_db_version': SupabaseSharedData.getLocalDbVersion,
       };
-      final res = await instance?.functions
-          .invoke(s, headers: headers, body: newBody)
+      final String? bearer = token ?? instance.auth.currentSession?.accessToken;
+      final res = await instance.functions
+          .invoke(s,
+              headers: {
+                ...headers ?? {},
+                if (bearer != null) 'Authorization': 'Bearer $bearer'
+              },
+              body: newBody)
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () => FunctionResponse(status: 500, data: 'Timeout'),
@@ -90,9 +107,6 @@ class SupabaseHelper {
       if (sup.tokenInvalid) {
         _invalidTokenListener.add(false);
       }
-      if (sup.tokenInvalid) {
-        _invalidTokenListener.add(true);
-      }
       return sup;
     } catch (e) {
       return SupabaseResponse.noResponse;
@@ -100,14 +114,14 @@ class SupabaseHelper {
   }
 
   static Future<Session?> setSession({required String refreshToken}) async {
-    final ses = await instance?.auth.setSession(refreshToken);
-    return ses?.session;
+    final ses = await instance.auth.setSession(refreshToken);
+    return ses.session;
   }
 
   static Future<Session?> signIn(String token) async =>
       await setSession(refreshToken: token);
 
   static Future signOut() async {
-    await auth?.signOut();
+    await auth.signOut();
   }
 }
